@@ -76,9 +76,22 @@
 {
   NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *)downloadTask.response;
   if (!_statusCode) {
-    _statusCode = [NSNumber numberWithLong:httpResponse.statusCode];
-    _contentLength = [NSNumber numberWithLong:httpResponse.expectedContentLength];
-    return _params.beginCallback(_statusCode, _contentLength, httpResponse.allHeaderFields);
+      if ([httpResponse respondsToSelector:@selector(statusCode)]) {
+          _statusCode = [NSNumber numberWithLong:httpResponse.statusCode];
+      } else {
+          _statusCode = @200;
+      }
+      if ([httpResponse respondsToSelector:@selector(expectedContentLength)]) {
+          _contentLength = [NSNumber numberWithLong:httpResponse.expectedContentLength];
+      } else {
+          _contentLength = @0;
+      }
+      NSDictionary *allHeaderFields = [NSDictionary dictionary];
+      if ([httpResponse respondsToSelector:@selector(allHeaderFields)]) {
+          allHeaderFields = httpResponse.allHeaderFields;
+      }
+    
+    return _params.beginCallback(_statusCode, _contentLength, allHeaderFields);
   }
 
   if ([_statusCode isEqualToNumber:[NSNumber numberWithInt:200]]) {
